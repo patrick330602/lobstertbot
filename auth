@@ -1,0 +1,15 @@
+#!/bin/bash
+source /root/cdn-site-hook/secrets
+tmp_data="$CERTBOT_VALIDATION"
+tmp_path="/.well-known/acme-challenge/$CERTBOT_TOKEN"
+tmp_url="$(curl -H "Content-Type: application/json" \
+	        -H "Authorization: Bearer $LINODE_TOKEN" \
+                -X POST -d "{\"method\": \"PUT\",\"name\": \"${tmp_path}\",\"content_type\": \"text/plain\",\"expires_in\": 360}" \
+  "https://api.linode.com/v4/object-storage/buckets/$LINODE_REGION/$LINODE_BUCKET/object-url")"
+tmp_url="$( echo $tmp_url | python3 -c "import sys, json; print(json.load(sys.stdin)[\"url\"])")"
+curl -H "Content-Type: text/plain" -X PUT -d "$tmp_data" "$tmp_url"
+
+curl -H "Content-Type: application/json" \
+     -H "Authorization: Bearer $LINODE_TOKEN" \
+     -X PUT -d "{\"acl\": \"public-read\",\"name\": \"${tmp_path}\"]}" \
+  "https://api.linode.com/v4/object-storage/buckets/$LINODE_REGION/$LINODE_BUCKET/object-acl"

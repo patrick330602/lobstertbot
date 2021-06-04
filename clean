@@ -1,0 +1,18 @@
+#!/bin/bash
+source /<path>/secrets
+tmp_path="/.well-known/acme-challenge/$CERTBOT_TOKEN"
+tmp_url="$(curl -H "Content-Type: application/json" \
+	        -H "Authorization: Bearer $LINODE_TOKEN" \
+                -X POST -d "{\"method\": \"DELETE\",\"name\": \"${tmp_path}\",\"expires_in\": 360}" \
+  "https://api.linode.com/v4/object-storage/buckets/$LINODE_REGION/$LINODE_BUCKET/object-url")"
+tmp_url="$( echo $tmp_url | python3 -c "import sys, json; print(json.load(sys.stdin)[\"url\"])")"
+curl -X DELETE "$tmp_url"
+curl -H "Authorization: Bearer $LINODE_TOKEN" \
+     -X DELETE \
+     "https://api.linode.com/v4/object-storage/buckets/$LINODE_REGION/$LINODE_BUCKET/ssl"
+tmp_cer="$(cat /etc/letsencrypt/live/$LINODE_BUCKET/cert.pem)"
+tmp_key="$(cat /etc/letsencrypt/live/$LINODE_BUCKET/privkey.pem)"
+curl -H "Content-Type: application/json" \
+     -H "Authorization: Bearer $LINODE_TOKEN" \
+     -X POST -d "{\"certificate\": \"${tmp_cer}\",\"name\": \"${tmp_key}\"}" \
+     "https://api.linode.com/v4/object-storage/buckets/$LINODE_REGION/$LINODE_BUCKET/ssl"
