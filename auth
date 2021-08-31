@@ -11,5 +11,5 @@ curl -H "Content-Type: text/plain" -X PUT -d "$tmp_data" "$tmp_url"
 
 curl -H "Content-Type: application/json" \
      -H "Authorization: Bearer $LINODE_TOKEN" \
-     -X PUT -d "{\"acl\": \"public-read\",\"name\": \"${tmp_path}\"]}" \
+     -X PUT -d "{\"acl\": \"public-read\",\"name\": \"${tmp_path}\"}" \
   "https://api.linode.com/v4/object-storage/buckets/$LINODE_REGION/$LINODE_BUCKET/object-acl"
